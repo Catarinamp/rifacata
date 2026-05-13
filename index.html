@@ -14,15 +14,16 @@
     <iframe id="iframeRifa" src=""></iframe>
 
     <script>
-        // SEU LINK FIXO DO GOOGLE APPS SCRIPT (ID LONGO SEGURO AQUI)
+        // CORREÇÃO: Cole o seu link real do Google Apps Script entre as aspas abaixo
+        // Certifique-se de que ele termina exatamente com /exec (sem o ?qtd=1 no final)
         const URL_MOTOR_GOOGLE = "google.com";
 
         window.onload = function() {
             // 1. O GitHub lê apenas a letra "q" no link ultra curto (Ex: ?q=1)
             const urlParams = new URLSearchParams(window.location.search);
-            const qtd = urlParams.get('q') || '2'; // Se não houver o ?q=, assume 2 por padrão
+            const qtd = urlParams.get('q') || '2'; 
 
-            // 2. Monta o link do Google por trás dos panos com a palavra inteira (?qtd=) que o seu servidor espera
+            // 2. Monta o link do Google por trás dos panos
             const linkFinalGoogle = URL_MOTOR_GOOGLE + "?qtd=" + qtd;
             
             // 3. Carrega a rifa no iframe oculto
