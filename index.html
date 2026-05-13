@@ -5,93 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rifa Eudora Siàge</title>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; font-family: Arial, sans-serif; background-color: #f4f4f4; overflow: hidden; }
-        .generator-container { padding: 30px; max-width: 450px; margin: 50px auto; background: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; box-sizing: border-box; }
-        h3 { color: #d4006f; margin-top: 0; }
-        input, select { width: 100%; padding: 10px; margin: 15px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
-        button { width: 100%; padding: 12px; background-color: #2196F3; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 15px; }
-        button:hover { background-color: #0b7dda; }
-        .result-box { margin-top: 20px; padding: 15px; background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 4px; display: none; text-align: left; }
-        iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: none; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; font-family: Arial, sans-serif; background-color: #ffffff; overflow: hidden; }
+        iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
     </style>
 </head>
 <body>
 
-    <!-- PAINEL DO MESTRE MANUAL -->
-    <div id="panelManual" class="generator-container">
-        <h3>🔗 Encurtador e Camuflador</h3>
-        <p style="color: #666; font-size: 14px;">Identifique este cliente (use números ou apelidos simples, sem espaços):</p>
-        <input type="text" id="idCliente" placeholder="Ex: cliente1 ou apenas 1">
-        
-        <p style="color: #666; font-size: 14px; margin-top: 15px;">Selecione a quantidade de números permitida:</p>
-        <select id="qtdPermitida">
-            <option value="1">1 Número</option>
-            <option value="2">2 Números</option>
-            <option value="3">3 Números</option>
-            <option value="4">4 Números</option>
-            <option value="5">5 Números</option>
-        </select>
-
-        <button onclick="gerarLinkCurto()">Criar Link Reduzido</button>
-        
-        <div id="resultado" class="result-box">
-            <span style="color: #2e7d32; font-weight: bold;">Link Reduzido Pronto!</span>
-            <input type="text" id="linkPronto" readonly style="margin: 8px 0; background: #fff;">
-            <button onclick="copiarLink()" style="background-color: #4CAF50;">Copiar para WhatsApp</button>
-        </div>
-    </div>
-
-    <!-- TELA DA RIFA OCULTA -->
     <iframe id="iframeRifa" src=""></iframe>
 
     <script>
-        // LINK DO SEU MOTOR DO GOOGLE APPS SCRIPT (FIXO NO CÓDIGO)
+        // SEU LINK FIXO DO GOOGLE APPS SCRIPT (ID LONGO SEGURO AQUI)
         const URL_MOTOR_GOOGLE = "google.com";
 
         window.onload = function() {
+            // 1. O GitHub lê apenas a letra "q" no link ultra curto (Ex: ?q=1)
             const urlParams = new URLSearchParams(window.location.search);
-            const id = urlParams.get('id');
-            const q = urlParams.get('q');
+            const qtd = urlParams.get('q') || '2'; // Se não houver o ?q=, assume 2 por padrão
 
-            // Se o link contiver a identificação (?id=...) e a quantidade (?q=...), abre direto a rifa
-            if (id && q) {
-                document.getElementById('panelManual').style.display = 'none';
-                
-                // Monta o link por trás dos panos sem o cliente ver o ID longo do Google
-                const linkFinalGoogle = URL_MOTOR_GOOGLE + "?qtd=" + q;
-                
-                const iframe = document.getElementById('iframeRifa');
-                iframe.src = linkFinalGoogle;
-                iframe.style.display = 'block';
+            // 2. Monta o link do Google por trás dos panos com a palavra inteira (?qtd=) que o seu servidor espera
+            const linkFinalGoogle = URL_MOTOR_GOOGLE + "?qtd=" + qtd;
+            
+            // 3. Carrega a rifa no iframe oculto
+            const iframe = document.getElementById('iframeRifa');
+            iframe.src = linkFinalGoogle;
+
+            // 4. CAMUFLAGEM TOTAL: Remove o "?q=1" da barra de endereços do cliente imediatamente!
+            if (window.history.replaceState) {
+                const urlLimpa = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                window.history.replaceState({ path: urlLimpa }, '', urlLimpa);
             }
         };
-
-        function gerarLinkCurto() {
-            const idCliente = document.getElementById('idCliente').value.trim().toLowerCase();
-            const qtd = document.getElementById('qtdPermitida').value;
-
-            if (!idCliente) {
-                return alert("Por favor, digite um identificador para o cliente!");
-            }
-
-            // Remove caracteres especiais e espaços por segurança
-            const idLimpo = idCliente.replace(/[^a-z0-9]/g, '');
-
-            // Monta o link super curto usando a estrutura do GitHub Pages
-            const urlBase = window.location.href.split('?')[0];
-            const linkReduzido = urlBase + "?id=" + idLimpo + "&q=" + qtd;
-
-            document.getElementById('linkPronto').value = linkReduzido;
-            document.getElementById('resultado').style.display = 'block';
-        }
-
-        function copiarLink() {
-            const inputLink = document.getElementById('linkPronto');
-            inputLink.select();
-            inputLink.setSelectionRange(0, 99999);
-            document.execCommand("copy");
-            alert("Link reduzido copiado!");
-        }
     </script>
 </body>
 </html>
