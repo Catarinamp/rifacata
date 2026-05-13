@@ -18,14 +18,14 @@
 </head>
 <body>
 
-    <!-- 1. PAINEL DO MESTRE MANUAL (Só aparece se você acessar o link limpo) -->
+    <!-- 1. PAINEL MANUAL DO MESTRE (Só aparece no link limpo) -->
     <div id="panelManual" class="generator-container">
         <h3>🔗 Encurtador de Rifa</h3>
         <p>Cole o link completo gerado pelo seu painel do Google:</p>
         
         <input type="text" id="linkOriginal" placeholder="google.com">
 
-        <button onclick="gerarLinkMaximoCurto()">Encurtar e Camuflar</button>
+        <button onclick="gerarLinkCurtoEficaz()">Encurtar e Camuflar</button>
         
         <div id="resultado" class="result-box">
             <span style="color: #2e7d32; font-weight: bold; font-size: 14px;">Link Curto Pronto:</span>
@@ -34,64 +34,57 @@
         </div>
     </div>
 
-    <!-- 2. TELA DA RIFA CAMUFLADA (Onde o cliente vai navegar) -->
+    <!-- 2. TELA DA RIFA CAMUFLADA (Onde o cliente navega) -->
     <iframe id="iframeRifa" src=""></iframe>
 
     <script>
         window.onload = function() {
-            // Captura os parâmetros da URL reduzida (?s=ID_LONGO&q=QUANTIDADE)
+            // Verifica se existe o parâmetro de redirecionamento (?r=...)
             const urlParams = new URLSearchParams(window.location.search);
-            const scriptId = urlParams.get('s');
-            const qtd = urlParams.get('q');
+            const linkCriptografado = urlParams.get('r');
 
-            // Se o link contiver os parâmetros encurtados, abre a rifa direto e esconde o painel
-            if (scriptId && qtd) {
+            if (linkCriptografado) {
+                // Esconde o painel gerador para o cliente não ver
                 document.getElementById('panelManual').style.display = 'none';
                 
-                // Reconstrói a URL original do Google por trás dos panos usando as abreviações
-                const linkFinalGoogle = "google.com" + scriptId + "/exec?qtd=" + qtd;
-                
-                const iframe = document.getElementById('iframeRifa');
-                iframe.src = linkFinalGoogle;
-                iframe.style.display = 'block';
+                try {
+                    // Decodifica o link original do Google em um piscar de olhos
+                    const linkOriginal = atob(linkCriptografado);
+                    
+                    // Alimenta o iframe com o motor do Google Script
+                    const iframe = document.getElementById('iframeRifa');
+                    iframe.src = linkOriginal;
+                    iframe.style.display = 'block';
 
-                // CAMUFLAGEM TOTAL: Remove os parâmetros da barra de endereços do cliente imediatamente!
-                if (window.history.replaceState) {
-                    const urlLimpa = window.location.protocol + "//" + window.location.host + window.location.pathname;
-                    window.history.replaceState({ path: urlLimpa }, '', urlLimpa);
+                    // MÁGICA DA CAMUFLAGEM: Remove o código gigante da barra de endereço imediatamente!
+                    if (window.history.replaceState) {
+                        const urlLimpa = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                        window.history.replaceState({ path: urlLimpa }, '', urlLimpa);
+                    }
+                } catch(e) {
+                    alert("Erro ao abrir a rifa. O link pode estar corrompido.");
                 }
             }
         };
 
-        function gerarLinkMaximoCurto() {
-            const urlCompleta = document.getElementById('linkOriginal').value.trim();
+        function gerarLinkCurtoEficaz() {
+            const linkOriginal = document.getElementById('linkOriginal').value.trim();
             
-            if (!urlCompleta || !urlCompleta.includes('google.com')) {
+            if (!linkOriginal || !linkOriginal.includes('google.com')) {
                 return alert("Por favor, cole um link válido do Google Apps Script!");
             }
 
-            try {
-                // Quebra o link do Google automaticamente para extrair o ID longo e a Quantidade
-                // Exemplo: google.com
-                const partesUrl = urlCompleta.split('/s/');
-                const idComResto = partesUrl[1].split('/exec');
-                const scriptId = idComResto[0]; // Pega o ID longo
-                
-                // Pega a quantidade de números (?qtd=X)
-                const urlObj = new URL(urlCompleta);
-                const qtd = urlObj.searchParams.get('qtd') || '2';
+            // Compacta e esconde o link inteiro (inclusive ID longo e quantidade) em Base64 seguro
+            const hashLink = btoa(linkOriginal);
+            
+            // Pega a URL limpa do seu GitHub Pages
+            const urlBase = window.location.href.split('?')[0];
+            
+            // Cria o link final encurtado
+            const linkFinal = urlBase + "?r=" + hashLink;
 
-                // Pega a URL base limta do seu GitHub Pages
-                const urlBase = window.location.href.split('?')[0];
-                
-                // Monta o link encurtado ao máximo usando abreviações rápidas (?s=ID&q=QTD)
-                const linkReduzido = urlBase + "?s=" + scriptId + "&q=" + qtd;
-
-                document.getElementById('linkPronto').value = linkReduzido;
-                document.getElementById('resultado').style.display = 'block';
-            } catch (e) {
-                alert("Erro ao ler o link do Google. Verifique se ele contém o ID e a quantidade correta (?qtd=).");
-            }
+            document.getElementById('linkPronto').value = linkFinal;
+            document.getElementById('resultado').style.display = 'block';
         }
 
         function copiarLink() {
