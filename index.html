@@ -6,78 +6,91 @@
     <title>Rifa Eudora Siàge</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; font-family: Arial, sans-serif; background-color: #f4f4f4; overflow: hidden; }
-        /* Tela do Gerador Manual (Só aparece se não houver link para abrir) */
         .generator-container { padding: 30px; max-width: 450px; margin: 50px auto; background: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; box-sizing: border-box; }
         h3 { color: #d4006f; margin-top: 0; }
-        input { width: 100%; padding: 10px; margin: 15px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        input, select { width: 100%; padding: 10px; margin: 15px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
         button { width: 100%; padding: 12px; background-color: #2196F3; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 15px; }
         button:hover { background-color: #0b7dda; }
         .result-box { margin-top: 20px; padding: 15px; background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 4px; display: none; text-align: left; }
-        /* estilo do iframe (Tela da Rifa) */
         iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: none; }
     </style>
 </head>
 <body>
 
-    <!-- 1. PAINEL DE CAMUFLAGEM MANUAL (Só o mestre acessa) -->
+    <!-- PAINEL DO MESTRE MANUAL -->
     <div id="panelManual" class="generator-container">
-        <h3>🔗 Camuflador de Links</h3>
-        <p style="color: #666; font-size: 14px;">Cole abaixo o link completo gerado no Apps Script (com o ?qtd=):</p>
-        <input type="text" id="linkOriginal" placeholder="google.com">
-        <button onclick="criarLinkCamuflado()">Camuflar Link</button>
+        <h3>🔗 Encurtador e Camuflador</h3>
+        <p style="color: #666; font-size: 14px;">Identifique este cliente (use números ou apelidos simples, sem espaços):</p>
+        <input type="text" id="idCliente" placeholder="Ex: cliente1 ou apenas 1">
+        
+        <p style="color: #666; font-size: 14px; margin-top: 15px;">Selecione a quantidade de números permitida:</p>
+        <select id="qtdPermitida">
+            <option value="1">1 Número</option>
+            <option value="2">2 Números</option>
+            <option value="3">3 Números</option>
+            <option value="4">4 Números</option>
+            <option value="5">5 Números</option>
+        </select>
+
+        <button onclick="gerarLinkCurto()">Criar Link Reduzido</button>
         
         <div id="resultado" class="result-box">
-            <span style="color: #2e7d32; font-weight: bold;">Link Camuflado Pronto!</span>
+            <span style="color: #2e7d32; font-weight: bold;">Link Reduzido Pronto!</span>
             <input type="text" id="linkPronto" readonly style="margin: 8px 0; background: #fff;">
-            <button onclick="copiarLink()" style="background-color: #4CAF50;">Copiar Link para WhatsApp</button>
+            <button onclick="copiarLink()" style="background-color: #4CAF50;">Copiar para WhatsApp</button>
         </div>
     </div>
 
-    <!-- 2. IFRAME DA RIFA (Onde o cliente vai navegar) -->
+    <!-- TELA DA RIFA OCULTA -->
     <iframe id="iframeRifa" src=""></iframe>
 
     <script>
-        // Ao carregar, verifica se o link atual possui um destino camuflado
+        // LINK DO SEU MOTOR DO GOOGLE APPS SCRIPT (FIXO NO CÓDIGO)
+        const URL_MOTOR_GOOGLE = "google.com";
+
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
-            const destinoCriptografado = urlParams.get('go');
+            const id = urlParams.get('id');
+            const q = urlParams.get('q');
 
-            if (destinoCriptografado) {
-                // Se existe o parâmetro 'go', decodifica o link original do Google e esconde o painel
+            // Se o link contiver a identificação (?id=...) e a quantidade (?q=...), abre direto a rifa
+            if (id && q) {
                 document.getElementById('panelManual').style.display = 'none';
-                const linkOriginal = atob(destinoCriptografado); // Descriptografa a URL
+                
+                // Monta o link por trás dos panos sem o cliente ver o ID longo do Google
+                const linkFinalGoogle = URL_MOTOR_GOOGLE + "?qtd=" + q;
                 
                 const iframe = document.getElementById('iframeRifa');
-                iframe.src = linkOriginal;
-                iframe.style.display = 'block'; // Mostra a rifa em tela cheia
+                iframe.src = linkFinalGoogle;
+                iframe.style.display = 'block';
             }
         };
 
-        // Função que gera a URL curta mascarada
-        function criarLinkCamuflado() {
-            const linkInput = document.getElementById('linkOriginal').value.trim();
-            if (!linkInput || !linkInput.includes('google.com')) {
-                return alert("Por favor, cole um link válido do Google Apps Script!");
+        function gerarLinkCurto() {
+            const idCliente = document.getElementById('idCliente').value.trim().toLowerCase();
+            const qtd = document.getElementById('qtdPermitida').value;
+
+            if (!idCliente) {
+                return alert("Por favor, digite um identificador para o cliente!");
             }
 
-            // Transforma o link gigante em um código de texto seguro (Base64) para esconder o ID longo da barra de endereço
-            const linkCodificado = btoa(linkInput);
-            
-            // Monta a nova URL usando o próprio endereço do GitHub
-            const urlAtual = window.location.href.split('?')[0];
-            const linkFinal = urlAtual + "?go=" + linkCodificado;
+            // Remove caracteres especiais e espaços por segurança
+            const idLimpo = idCliente.replace(/[^a-z0-9]/g, '');
 
-            document.getElementById('linkPronto').value = linkFinal;
+            // Monta o link super curto usando a estrutura do GitHub Pages
+            const urlBase = window.location.href.split('?')[0];
+            const linkReduzido = urlBase + "?id=" + idLimpo + "&q=" + qtd;
+
+            document.getElementById('linkPronto').value = linkReduzido;
             document.getElementById('resultado').style.display = 'block';
         }
 
-        // Função auxiliar para copiar o link gerado
         function copiarLink() {
             const inputLink = document.getElementById('linkPronto');
             inputLink.select();
             inputLink.setSelectionRange(0, 99999);
             document.execCommand("copy");
-            alert("Link camuflado copiado com sucesso!");
+            alert("Link reduzido copiado!");
         }
     </script>
 </body>
